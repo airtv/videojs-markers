@@ -158,7 +158,7 @@ function registerVideoJsMarkersPlugin(options) {
     });
   }
 
-  function addMarkers(newMarkers: Array<Marker>): void {
+  function _addMarkers(newMarkers: Array<Marker>): void {
     newMarkers.forEach((marker: Marker) => {
       marker.key = generateUUID();
 
@@ -171,6 +171,14 @@ function registerVideoJsMarkersPlugin(options) {
     })
 
     sortMarkersList();
+  }
+
+  function addMarkers(newMarkers: Array<Marker>): void {
+    if (isNaN(player.duration()) || player.duration() == 0) {
+      player.markers.addMarkersQueue.push(newMarkers);
+    } else {
+      _addMarkers(newMarkers);
+    }
   }
 
   function getPosition(marker: Marker): number {
@@ -452,10 +460,16 @@ function registerVideoJsMarkersPlugin(options) {
   // setup the plugin after we loaded video's meta data
   player.on("loadedmetadata", function() {
     initialize();
+
+    let markers;
+    while (markers = player.markers.addMarkersQueue.shift()) {
+      _addMarkers(markers);
+    }
   });
 
   // exposed plugin API
   player.markers = {
+    addMarkersQueue: [],
     getMarkers: function(): Array<Marker> {
       return markersList;
     },
