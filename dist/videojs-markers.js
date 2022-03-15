@@ -11,8 +11,8 @@
     global.videojsMarkers = mod.exports;
   }
 })(this, function (_video) {
-  /*! videojs-markers - v1.0.1 - 2018-10-31
-  * Copyright (c) 2018 ; Licensed  */
+  /*! videojs-markers - v1.0.1 - 2022-03-15
+  * Copyright (c) 2022 ; Licensed  */
   'use strict';
 
   var _video2 = _interopRequireDefault(_video);
@@ -170,7 +170,7 @@
       });
     }
 
-    function addMarkers(newMarkers) {
+    function _addMarkers(newMarkers) {
       newMarkers.forEach(function (marker) {
         marker.key = generateUUID();
 
@@ -182,6 +182,14 @@
       });
 
       sortMarkersList();
+    }
+
+    function addMarkers(newMarkers) {
+      if (isNaN(player.duration()) || player.duration() == 0) {
+        player.markers.addMarkersQueue.push(newMarkers);
+      } else {
+        _addMarkers(newMarkers);
+      }
     }
 
     function getPosition(marker) {
@@ -450,10 +458,16 @@
     // setup the plugin after we loaded video's meta data
     player.on("loadedmetadata", function () {
       initialize();
+
+      var markers = void 0;
+      while (markers = player.markers.addMarkersQueue.shift()) {
+        _addMarkers(markers);
+      }
     });
 
     // exposed plugin API
     player.markers = {
+      addMarkersQueue: [],
       getMarkers: function getMarkers() {
         return markersList;
       },
